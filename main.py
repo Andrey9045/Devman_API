@@ -33,7 +33,6 @@ def get_checks(url, headers, params):
         timeout=90
     )
     response.raise_for_status()
-    print(type(response))
     checks = response.json()
     return checks
 
