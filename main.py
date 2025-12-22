@@ -26,7 +26,8 @@ def get_lesson_url(checks):
     return lesson_url
 
 
-def get_checks(url, headers, params):
+def get_checks(headers, params):
+    url = 'https://dvmn.org/api/long_polling/'
     response = requests.get(
         url,
         headers=headers,
@@ -51,73 +52,18 @@ def send_message(checks, bot, chat_id):
     bot.send_message(text=message, chat_id=chat_id)
 
 
-def get_chat_id_interactive(bot):
-    print("Chat_id не найдет в .env. Выберите способ получения chat_id:")
-    print("1. Автоматически (Перед выбором этой опции напишите боту в Telegram)")
-    print("2. Вручную (ввести chat_id)")
-
-    choice = input("Ваш выбор 1/2:").strip()
-    if choice == "1":
-        return get_chat_id_automatically(bot)
-    elif choice == "2":
-        return get_chat_id_manually()
-    else:
-        print("Неверный выбор")
-        return None 
-
-
-def get_chat_id_manually():
-    while True:
-        try:
-            chat_id = input("Введите ваш chat_id: ").strip()
-            if not chat_id:
-                print("❌ Пустой ввод, попробуйте еще раз")
-                continue
-            chat_id_int = int(chat_id)
-            if chat_id_int<100000000:
-                confirm = input(
-                    f"Chat_id:{chat_id}, выглядит коротким"
-                    f"Вы уверены(y/n):").lower()
-                if confirm != 'y':
-                    continue
-            print("Приятного использования! Ожидайте уведомлений!")
-            return chat_id
-        except ValueError:
-            print("Ошибка: chat_id должен быть числом")
-            retry = input("Попробовать еще раз? (y/n): ").lower()
-            if retry != 'y':
-                return None
-
-
-def get_chat_id_automatically(bot):
-    updates = bot.get_updates()
-
-    if not updates:
-        print("Сообщений боту еще не поступало, напишите боту")
-        return None 
-
-    last_update = updates[-1]
-    chat_id = last_update.message.chat.id
-    print(f"chat_id получен: {chat_id}")
-    print("Приятного использования! Ожидайте уведомлений!")
-    return chat_id
-
-
 def main():
     load_dotenv()
-    bot = telegram.Bot(token=os.getenv('TG_TOKEN'))
-    url = 'https://dvmn.org/api/long_polling/'
-    headers = {"Authorization": os.getenv('DEVMAN_TOKEN')}
+    bot = telegram.Bot(token=os.environ['TG_TOKEN'])
+    headers = {"Authorization": os.environ['DEVMAN_TOKEN']}
     chat_id = os.getenv('TELEGRAM_CHAT_ID')
-    if not chat_id:
-        chat_id = get_chat_id_interactive(bot)
     params = {}
     timestamp = None
     while True:
         try:
             if timestamp:
                 params["timestamp"] = timestamp
-            checks = get_checks(url, headers, params)
+            checks = get_checks(headers, params)
             if checks["status"] == "found":
                 send_message(checks, bot, chat_id)
                 timestamp = checks["last_attempt_timestamp"]
