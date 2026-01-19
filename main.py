@@ -125,7 +125,6 @@ def main():
                 logger.debug("Таймаут запроса")
                 timestamp = checks["timestamp_to_request"]
         except requests.exceptions.ReadTimeout:
-            logger.debug("Таймаут соединения (ReadTimeout)")
             continue
         except requests.exceptions.ConnectionError:
             logger.warning("Соединение прервано. Повторное подключение через 5 секунд...")
